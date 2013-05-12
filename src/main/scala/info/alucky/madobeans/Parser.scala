@@ -15,9 +15,13 @@ class Parser extends RegexParsers {
     case None~expr => expr
   }
   def expression: Parser[AST] = opt("""\s+""".r)~>ifExpression
-  def ifExpression: Parser[AST] = orExpression~opt("?"~>expression~":"~expression)^^{
+  def ifExpression: Parser[AST] = assignExpression~opt("?"~>expression~":"~expression)^^{
     case a~Some(b~_~c) => AST.IfExpr(a,b,c)
     case a~None => a
+  }
+  def assignExpression: Parser[AST] = opt(wordToken<~"=")~orExpression^^{
+    case Some(word)~expr => AST.BinOp("=",word,expr)
+    case None~expr => expr
   }
   def orExpression: Parser[AST] = andExpression~rep("||"~andExpression)^^{
     case left~rest => {

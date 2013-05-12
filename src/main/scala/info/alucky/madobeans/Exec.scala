@@ -12,11 +12,18 @@ class Env(val parent: Option[Env]) {
     }
   }
   def set(key: String, v: Any) = {env += key->v}
-  def has(key: String) = env.get(key) match {
+  def has(key: String): Boolean = env.get(key) match {
+    case Some(_) => true
+    case None => parent match {
+      case Some(p) => p.has(key)
+      case None => false
+    }
+  }
+  def defined(key: String) = env.get(key) match {
     case Some(_) => true
     case None => false
   }
-  def update(key: String, v:Any) = env.update(key, v)
+  def update(key: String, v:Any) = {env(key) = v}
 }
 
 trait Func {
@@ -44,14 +51,15 @@ object Exec {
       }
     }
     case DefineStmt(WordLit(word),expr) => {
+      if(env.defined(word)) throw new IllegalStateException(word + " has already defined")
       env.set(word,exec(expr,env))
     }
     case BinOp("=",a,b) => a match {
       case WordLit(s) => if(env.has(s)){
         val v = exec(b,env)
-        env.update(s,v)
+        env(s) = v
       }else{
-        throw new IllegalStateException(s + "is not defined")
+        throw new IllegalStateException(s + " is not defined")
       }
     }
     case BinOp(op,a,b) => {
