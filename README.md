@@ -5,7 +5,7 @@ This is a luckin' language!!
 ##これは何？
 
 あらっきぃ( [@alucky0707](https://twitter.com/#!/alucky0707) )が思いつきとノリでScalaで作った、最小指向のプログラミング言語です。
-名前はうにゅほ氏（ [@Unyuho0827] ）によってつけられました。
+名前はうにゅほ氏（ [@Unyuho0827](https://twitter.com/#!/Unyuho0827) ）によってつけられました。
 
 ##特徴は？
 
