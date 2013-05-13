@@ -66,6 +66,7 @@ object Exec {
         case WordLit(s) => if(env.has(s)){
           val v = exec(b,env)
           env(s) = v
+          v
         }else{
           throw new IllegalStateException(s + " is not defined")
         }
@@ -176,11 +177,11 @@ object Exec {
       case Empty() => ()
     }
     ret match {
-      case () => ()
       case n:Number => n
       case s:String => s
       case b:Boolean => b
-      case _:Any => ()
+      case f:Func => f
+      case _ => ()
     }
   }
 }
