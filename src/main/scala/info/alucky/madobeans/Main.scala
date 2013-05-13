@@ -23,10 +23,10 @@ object Main extends App {
       }catch{
         case err: Throwable => println("error : " + err.getClass.getName() + ":" + err.getMessage())
       }
-      case None => println("Error")
+      case None => println("Parse Error")
     }
   } else {
-    println("Mado Language Beans(Tofu) 0.1.0\n")
+    println("Mado Language Beans(Tofu) 0.1.1\n")
     var src = ""
     breakable {
       do{
@@ -42,10 +42,9 @@ object Main extends App {
               case err:Throwable => println("error : " + err.getClass.getName() + ":" + err.getMessage())
             }
           }
-          case None => println("Error")
+          case None => println("Parse Error")
         }
       }while(true)
     }
-    println("See you!")
   }
 }

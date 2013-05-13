@@ -123,7 +123,7 @@ class Parser extends RegexParsers {
     case as~_~stmts => AST.FuncLit(as,stmts)
   }
   def functionCall: Parser[List[AST]] = "("~~>repsep(expression, ",")<~~")"
-  def wordToken: Parser[AST] = """[\w[^0-9]]\w*""".r^^{
+  def wordToken: Parser[AST] = """[\w&&[^0-9]]\w*""".r^^{
     case str => AST.WordLit(str)
   }
   

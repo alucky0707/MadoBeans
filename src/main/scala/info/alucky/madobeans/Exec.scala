@@ -51,7 +51,7 @@ case class FuncVal(var args: List[AST],expr: AST,env: Env) extends Func {
 object Exec {
   import AST._
   def exec(ast: AST,env: Env): Any = {
-    val ret = ast match {
+    val ret: Any = ast match {
       case StmtList(lines) => lines.fold(0.asInstanceOf[Any]){(a,b)=>
         b match {
           case Empty() => a
@@ -78,54 +78,51 @@ object Exec {
           case "+" => (l,r) match {
             case (l:String,r) => l + r
             case (l,r:String) => l + r
+            case (l:Int,r:Int) => l + r
             case (l:Number,r:Number) => l.doubleValue() + r.doubleValue()
           }
           case "-" => (l,r) match {
+            case (l:Int,r:Int) => l + r
             case (l:Number,r:Number) => l.doubleValue() - r.doubleValue()
           }
           case "*" => (l,r) match {
+            case (l:Int,r:Int) => l * r
             case (l:Number,r:Number) => l.doubleValue() * r.doubleValue()
-            case (l:String,r:Double) => l * r.toInt
+            case (l:String,r:Long) => l * r.toInt
           }
           case "/" => (l,r) match {
+            case (l:Int,r:Int) => l / r
             case (l:Number,r:Number) => l.doubleValue() / r.doubleValue()
           }
           case "%" => (l,r) match {
-            case (l:Double,r:Double) => l % r
+            case (l:Int,r:Int) => l % r
+            case (l:Number,r:Number) => l.doubleValue() % r.doubleValue()
           }
           case "==" => (l,r) match {
-            case (l:Double,r:Double) => l == r
+            case (l:Number,r:Number) => l == r
             case (l:String,r:String) => l == r
             case (l:Boolean,r:Boolean) => l == r
           }
           case "!=" => (l,r) match {
-            case (l:Double,r:Double) => l != r
+            case (l:Number,r:Number) => l != r
             case (l:String,r:String) => l != r
             case (l:Boolean,r:Boolean) => l != r
           }
           case "<=" => (l,r) match {
-            case (l:Double,r:Double) => l <= r
+            case (l:Number,r:Number) => l.doubleValue() <= r.doubleValue()
             case (l:String,r:String) => l <= r
           }
           case ">=" => (l,r) match {
-            case (l:Double,r:Double) => l >= r
+            case (l:Number,r:Number) => l.doubleValue() >= r.doubleValue()
             case (l:String,r:String) => l >= r
           }
           case "<" => (l,r) match {
-            case (l:Double,r:Double) => l < r
+            case (l:Number,r:Number) => l.doubleValue() < r.doubleValue()
             case (l:String,r:String) => l < r
           }
           case ">" => (l,r) match {
-            case (l:Double,r:Double) => l > r
+            case (l:Number,r:Number) => l.doubleValue() > r.doubleValue()
             case (l:String,r:String) => l > r
-          }
-          case "===" => (l,r) match {
-            case (l:Double,r:Double) => l.toLong == r.toLong
-            case (l:String,r:String) => l.matches(r)
-          }
-          case "!==" => (l,r) match {
-            case (l:Double,r:Double) => l.toLong != r.toLong
-            case (l:String,r:String) => !l.matches(r)
           }
           case "&&" => (l,r) match {
             case (l:Boolean,r:Boolean) => l && r
@@ -139,10 +136,10 @@ object Exec {
         val b = exec(a,env)
         op match {
           case "+" => b match {
-            case b:Double => b
+            case b:Number => b
           }
           case "-" => b match {
-            case b:Double => -b
+            case b:Number => -b.doubleValue()
           }
           case "!" => b match {
             case b:Boolean => !b
@@ -158,7 +155,7 @@ object Exec {
           case false => exec(c,env)
         }
       }
-      case NumberLit(s) => if(s.indexOf(".") == -1) s.toLong else s.toDouble
+      case NumberLit(s) => if(s.indexOf(".") == -1) s.toInt else s.toDouble
       case StringLit(s) => s
       case WordLit(s) => env.get(s) match {
         case Some(x) => x
@@ -177,7 +174,8 @@ object Exec {
       case Empty() => ()
     }
     ret match {
-      case n:Number => n
+      case n:Int => n
+      case n:Double => n
       case s:String => s
       case b:Boolean => b
       case f:Func => f
