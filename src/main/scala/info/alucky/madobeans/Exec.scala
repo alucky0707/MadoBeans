@@ -158,7 +158,7 @@ object Exec {
           case false => exec(c,env)
         }
       }
-      case NumberLit(s) => s.toDouble
+      case NumberLit(s) => if(s.indexOf(".") == -1) s.toLong else s.toDouble
       case StringLit(s) => s
       case WordLit(s) => env.get(s) match {
         case Some(x) => x

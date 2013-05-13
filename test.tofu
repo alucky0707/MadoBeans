@@ -1,9 +1,6 @@
 counter := {->
   x := 0
-  {->
-    x = x + 1
-    x
-  }
+  {->x = x + 1;x}
 }
 
 c := counter()

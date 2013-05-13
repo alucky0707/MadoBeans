@@ -28,7 +28,7 @@ class Parser extends RegexParsers {
   override protected val whiteSpace = """[ ]+""".r
   
   def program: Parser[AST] = statementList
-  def statementList: Parser[AST] = opt("""\s+""".r)~>repsep(statement, """\s+""".r)^^{
+  def statementList: Parser[AST] = opt("""[\s;]+""".r)~>repsep(statement, """[\s;]+""".r)^^{
     case stmts => AST.StmtList(stmts)
   }
   def statement: Parser[AST] = defineStatement
@@ -123,7 +123,7 @@ class Parser extends RegexParsers {
     case as~_~stmts => AST.FuncLit(as,stmts)
   }
   def functionCall: Parser[List[AST]] = "("~~>repsep(expression, ",")<~~")"
-  def wordToken: Parser[AST] = """[a-zA-Z_]+""".r^^{
+  def wordToken: Parser[AST] = """[\w[^0-9]]\w*""".r^^{
     case str => AST.WordLit(str)
   }
   

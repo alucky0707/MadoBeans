@@ -26,12 +26,12 @@ object Main extends App {
       case None => println("Error")
     }
   } else {
-    println("Hello!\n")
+    println("Mado Language Beans(Tofu) 0.1.0\n")
     var src = ""
     breakable {
       do{
         src = {print("(MadoBeans)> ");readLine}
-        if(src == ":exit") break
+        if(src.trim == ":exit") break
         val ast = parser.parse(src)
         ast match {
           case Some(ast) => {
