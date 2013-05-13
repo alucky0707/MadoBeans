@@ -1,8 +1,30 @@
 package info.alucky.madobeans
 
+import scala.language.{postfixOps, higherKinds, implicitConversions}
 import scala.util.parsing.combinator._
 
 class Parser extends RegexParsers {
+  class ExParser[A](p: Parser[A]) extends Parser[A] {
+    def apply(in: Input) = p(in)
+    
+    def ~~[B](q: => Parser[B]): Parser[~[A,B]] = {
+       p~opt("""\s+""".r)~q^^{
+         case a~_~b => new ~(a,b)
+       }
+    }
+    def ~~>[B](q: => Parser[B]): Parser[B] = {
+      p~>opt("""\s+""".r)~>q
+    }
+    def <~~[B](q: Parser[B]): Parser[A] = {
+      p<~opt("""\s+""".r)<~q
+    }
+  }
+  
+  
+  implicit def exparser(p:String): ExParser[String] = new ExParser(literal(p))
+  implicit def exparser[A](p: Parser[A]): ExParser[A] = new ExParser(p)
+  
+  
   override protected val whiteSpace = """[ ]+""".r
   
   def program: Parser[AST] = statementList
@@ -10,20 +32,20 @@ class Parser extends RegexParsers {
     case stmts => AST.StmtList(stmts)
   }
   def statement: Parser[AST] = defineStatement
-  def defineStatement: Parser[AST] = opt(wordToken<~":=")~expression^^{
+  def defineStatement: Parser[AST] = opt(wordToken<~":=")~~expression^^{
     case Some(word)~expr => AST.DefineStmt(word,expr)
     case None~expr => expr
   }
-  def expression: Parser[AST] = opt("""\s+""".r)~>ifExpression
-  def ifExpression: Parser[AST] = assignExpression~opt("?"~>expression~":"~expression)^^{
+  def expression: Parser[AST] = ifExpression
+  def ifExpression: Parser[AST] = assignExpression~opt("?"~~>expression~~":"~~expression)^^{
     case a~Some(b~_~c) => AST.IfExpr(a,b,c)
     case a~None => a
   }
-  def assignExpression: Parser[AST] = opt(wordToken<~"=")~orExpression^^{
+  def assignExpression: Parser[AST] = opt(wordToken<~~"=")~~orExpression^^{
     case Some(word)~expr => AST.BinOp("=",word,expr)
     case None~expr => expr
   }
-  def orExpression: Parser[AST] = andExpression~rep("||"~andExpression)^^{
+  def orExpression: Parser[AST] = andExpression~rep("||"~~andExpression)^^{
     case left~rest => {
       var ast = left
       rest.foreach{
@@ -32,7 +54,7 @@ class Parser extends RegexParsers {
       ast
     }
   }
-  def andExpression: Parser[AST] = compareExpression~rep("&&"~compareExpression)^^{
+  def andExpression: Parser[AST] = compareExpression~rep("&&"~~compareExpression)^^{
   case left~rest => {
     var ast = left
       rest.foreach{
@@ -42,7 +64,7 @@ class Parser extends RegexParsers {
     }
   }
   def compareExpression: Parser[AST] = addExpression~opt(
-                                        ("==="|"!=="|"<="|">="|"<"|">"|"=="|"!=")~addExpression)^^{
+                                        ("==="|"!=="|"<="|">="|"<"|">"|"=="|"!=")~~addExpression)^^{
     case left~rest => {
       var ast = left
       rest.foreach{
@@ -51,7 +73,7 @@ class Parser extends RegexParsers {
       ast
     }
   }
-  def addExpression: Parser[AST] = mulExpression~rep(("+"|"-")~mulExpression)^^{
+  def addExpression: Parser[AST] = mulExpression~rep(("+"|"-")~~mulExpression)^^{
     case left~rest => {
       var ast = left
       rest.foreach{
@@ -60,7 +82,7 @@ class Parser extends RegexParsers {
       ast
     }
   }
-  def mulExpression: Parser[AST] = powExpression~rep(("*"|"/"|"%")~powExpression)^^{
+  def mulExpression: Parser[AST] = powExpression~rep(("*"|"/"|"%")~~powExpression)^^{
     case left~rest => {
       var ast = left
       rest.foreach{
@@ -69,11 +91,11 @@ class Parser extends RegexParsers {
       ast
     }
   }
-  def powExpression: Parser[AST] = unaryExpression~opt("^"~>unaryExpression)^^{
+  def powExpression: Parser[AST] = unaryExpression~opt("^"~~>unaryExpression)^^{
     case left~Some(right) => AST.BinOp("^",left,right)
     case left~None => left
   }
-  def unaryExpression: Parser[AST] = opt("+"|"-"|"!")~primary^^{
+  def unaryExpression: Parser[AST] = opt("+"|"-"|"!")~~primary^^{
     case Some(op)~v => AST.UnOp(op,v)
     case None~v => v
   }
@@ -81,7 +103,7 @@ class Parser extends RegexParsers {
                              numberLiteral|
                              stringLiteral|
                              functionLiteral|
-                             "("~>statementList<~")")~rep(functionCall))^^{
+                             "("~~>statementList<~~")")~rep(functionCall))^^{
     case None => AST.Empty()
     case Some(v~rest) => {
       var ast = v
@@ -97,10 +119,10 @@ class Parser extends RegexParsers {
   def stringLiteral: Parser[AST] = "\""~>"""([^\"]*)""".r<~"\""^^{
     case s => AST.StringLit(s)
   }
-  def functionLiteral: Parser[AST] = "{"~>repsep(wordToken,",")~"->"~statementList<~"}"^^{
+  def functionLiteral: Parser[AST] = "{"~>repsep(wordToken,",")~"->"~~statementList<~~"}"^^{
     case as~_~stmts => AST.FuncLit(as,stmts)
   }
-  def functionCall: Parser[List[AST]] = "("~>repsep(expression, ",")<~")"
+  def functionCall: Parser[List[AST]] = "("~~>repsep(expression, ",")<~~")"
   def wordToken: Parser[AST] = """[a-zA-Z_]+""".r^^{
     case str => AST.WordLit(str)
   }
