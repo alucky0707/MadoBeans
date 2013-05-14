@@ -18,17 +18,12 @@ object Main extends App {
     val src = file.getLines mkString("\n")
     val ast = parser.parse(src)
     ast match {
-<<<<<<< HEAD
       case Some(ast) => try{
         Exec exec(ast, env)
       }catch{
         case err: Throwable => println("error : " + err.getClass.getName() + ":" + err.getMessage())
       }
       case None => println("Parse Error")
-=======
-      case Some(ast) => try{Exec exec(ast, env)}catch{ case err: IllegalStateException => println(err.getMessage()) }
-      case None => println("Error")
->>>>>>> parent of f899fb7... エラーメッセージを心なし親切にした。
     }
   } else {
     println("Mado Language Beans(Tofu) 0.1.1\n")

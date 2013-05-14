@@ -2,6 +2,8 @@
 
 This is a luckin' language!!
 
+[WARNING]このREADME.mdは書きかけです。
+
 ##これは何？
 
 あらっきぃ( [@alucky0707](https://twitter.com/#!/alucky0707) )が思いつきとノリでScalaで作った、最小指向のプログラミング言語です。
