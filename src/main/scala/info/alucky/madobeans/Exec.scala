@@ -81,7 +81,7 @@ object Exec {
                 case (l:Number,r:Number) => l.doubleValue() + r.doubleValue()
                 }
                 case "-" => (l,r) match {
-                case (l:Int,r:Int) => l + r
+                case (l:Int,r:Int) => l - r
                 case (l:Number,r:Number) => l.doubleValue() - r.doubleValue()
                 }
                 case "*" => (l,r) match {
