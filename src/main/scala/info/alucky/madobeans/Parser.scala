@@ -6,31 +6,34 @@ import scala.util.parsing.combinator._
 class Parser extends RegexParsers {
   class ExParser[A](p: Parser[A]) extends Parser[A] {
     def apply(in: Input) = p(in)
-    
+
+    def commentR = """\s+""".r
+
     def ~~[B](q: => Parser[B]): Parser[~[A,B]] = {
-       p~opt("""\s+""".r)~q^^{
+       p~opt(commentR)~q^^{
          case a~_~b => new ~(a,b)
        }
     }
     def ~~>[B](q: => Parser[B]): Parser[B] = {
-      p~>opt("""\s+""".r)~>q
+      p~>opt(commentR)~>q
     }
     def <~~[B](q: Parser[B]): Parser[A] = {
-      p<~opt("""\s+""".r)<~q
+      p<~opt(commentR)<~q
     }
   }
-  
-  
+
+
   implicit def exparser(p:String): ExParser[String] = new ExParser(literal(p))
   implicit def exparser[A](p: Parser[A]): ExParser[A] = new ExParser(p)
-  
-  
-  override protected val whiteSpace = """[ ]+""".r
-  
+
+
+  override protected val whiteSpace = """[\s&&[^\n]]+""".r
+
   def program: Parser[AST] = statementList
-  def statementList: Parser[AST] = opt("""[\s;]+""".r)~>repsep(statement, """[\s;]+""".r)^^{
-    case stmts => AST.StmtList(stmts)
+  def statementList: Parser[AST] = opt(commentP)~>repsep("#"~>rep("""[^\n]+""".r)^^{case _=>AST.Empty()}|statement, commentP)^^{
+    case stmts => AST.StmtList(stmts.filterNot(_ == AST.Empty()))
   }
+  def commentP: Parser[Any] = """\s+""".r
   def statement: Parser[AST] = defineStatement
   def defineStatement: Parser[AST] = opt(wordToken<~":=")~~expression^^{
     case Some(word)~expr => AST.DefineStmt(word,expr)
@@ -126,7 +129,7 @@ class Parser extends RegexParsers {
   def wordToken: Parser[AST] = """[\w&&[^0-9]]\w*""".r^^{
     case str => AST.WordLit(str)
   }
-  
+
   def parse(str:String): Option[AST] = parseAll(program, str) match {
     case Success (result, _) => Some(result)
     case failure: NoSuccess => System.err.println(failure);None

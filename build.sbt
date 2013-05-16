@@ -2,7 +2,7 @@ import AssemblyKeys._
 
 name := "MadoBeans"
 
-version := "0.1.1"
+version := "0.1.1-test"
 
 scalaVersion := "2.10.1"
 

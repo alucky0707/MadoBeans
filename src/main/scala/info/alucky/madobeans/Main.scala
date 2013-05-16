@@ -21,7 +21,7 @@ object Main extends App {
       case Some(ast) => try{
         Exec exec(ast, env)
       }catch{
-        case err: Throwable => println("error : " + err.getClass.getName() + ":" + err.getMessage())
+        case err: Throwable => err.printStackTrace()
       }
       case None => println("Parse Error")
     }
@@ -35,8 +35,12 @@ object Main extends App {
         val ast = parser.parse(src)
         ast match {
           case Some(ast) => {
-            val v = Exec exec(ast, env)
-            println(" => " + v)
+            try{
+              val v = Exec exec(ast, env)
+              println(" => " + v)
+            }catch{
+              case err: Throwable => println("execute error : " + err.getClass().getName + " : " + err.getMessage())
+            }
           }
           case None => println("Parse Error")
         }
