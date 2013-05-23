@@ -161,6 +161,7 @@ object Exec {
       case Some(x) => x
       case None => throw new IllegalStateException(s + " is not found")
     }
+    case NilLit() => ()
     case FuncLit(as, e) => FuncVal(as, e, env)
     case CallOp(a, args) => {
       val f = exec(a, env)

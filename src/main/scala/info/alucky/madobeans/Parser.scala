@@ -39,12 +39,12 @@ class Parser extends RegexParsers {
     case Some(word)~expr => AST.DefineStmt(word,expr)
     case None~expr => expr
   }
-  def expression: Parser[AST] = ifExpression
+  def expression: Parser[AST] = "\n"^^{case _ => AST.Empty()}|ifExpression
   def ifExpression: Parser[AST] = assignExpression~opt("?"~~>expression~~":"~~expression)^^{
     case a~Some(b~_~c) => AST.IfExpr(a,b,c)
     case a~None => a
   }
-  def assignExpression: Parser[AST] = opt(wordToken<~~"=")~~orExpression^^{
+  def assignExpression: Parser[AST] = opt(wordToken<~"""=(?!==?)""".r)~orExpression^^{
     case Some(word)~expr => AST.BinOp("=",word,expr)
     case None~expr => expr
   }
@@ -102,19 +102,29 @@ class Parser extends RegexParsers {
     case Some(op)~v => AST.UnOp(op,v)
     case None~v => v
   }
-  def primary: Parser[AST] = opt((wordToken|
+  def primary: Parser[AST] =(wordToken|
                              numberLiteral|
                              stringLiteral|
                              functionLiteral|
-                             "("~~>statementList<~~")")~rep(functionCall))^^{
-    case None => AST.Empty()
-    case Some(v~rest) => {
+                             nilLiteral|
+                             "("~~>statementList<~~")")~rep(functionCall)/*~opt(functionCall2)*/^^{
+//    case None => AST.Empty()
+//    case Some(v~rest) => {
+    case v~rest/*~None*/ => {
       var ast = v
       rest.foreach{
         case args => {ast = AST.CallOp(ast,args)}
       }
       ast
     }
+/*    case v~rest/*~Some(c)*/ => {
+      var ast = v
+      rest.foreach{
+        case args => {ast = AST.CallOp(ast,args)}
+      }
+      ast = AST.CallOp(ast,c)
+      ast
+    }*/
   }
   def numberLiteral: Parser[AST] = """[0-9]+(\.[0-9]*)?""".r^^{
     case s => AST.NumberLit(s)
@@ -122,10 +132,17 @@ class Parser extends RegexParsers {
   def stringLiteral: Parser[AST] = "\""~>"""([^\"]*)""".r<~"\""^^{
     case s => AST.StringLit(s)
   }
-  def functionLiteral: Parser[AST] = "{"~>repsep(wordToken,",")~"->"~~statementList<~~"}"^^{
-    case as~_~stmts => AST.FuncLit(as,stmts)
+  def functionLiteral: Parser[AST] = "{"~>opt(repsep(wordToken,",")~"->")~~statementList<~~"}"^^{
+    case Some(as~_)~stmts => AST.FuncLit(as,stmts)
+    case None~stmts => AST.FuncLit(List(),stmts)
+  }
+  def nilLiteral: Parser[AST] = "("~~")"^^{
+    case _ => AST.NilLit()
   }
   def functionCall: Parser[List[AST]] = "("~~>repsep(expression, ",")<~~")"
+//  def functionCall2: Parser[List[AST]] = expression^^{
+//    case a => List(a)
+//  }
   def wordToken: Parser[AST] = """[\w&&[^0-9]]\w*""".r^^{
     case str => AST.WordLit(str)
   }
